@@ -1,61 +1,278 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+Laravel Post API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+🇮🇷 نسخه فارسی
 
-## About Laravel
+معرفی
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+یک API ساده و تمیز برای مدیریت پست‌ها (CRUD) با Laravel 12 که شامل اعتبارسنجی (Form Request)، Route Model Binding، و ساختار RESTful است. این پروژه برای تمرین و همچنین پایه‌سازی یک سرویس واقعی مناسب است.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+امکانات (Features)
+	•	ایجاد، خواندن، به‌روزرسانی، حذف پست‌ها (CRUD کامل)
+	•	Route Model Binding خودکار
+	•	اعتبارسنجی ورودی با Form Request (Store / Update)
+	•	پاسخ‌های JSON استاندارد
+	•	پیام‌های خطای اعتبارسنجی سفارشی
+	•	بروزرسانی جزئی با متد PATCH و Rule sometimes
+	•	آماده برای توسعه بیشتر (Auth, Pagination, Filter, Test)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+ساختار پوشه (خلاصه)
 
-## Learning Laravel
+app/
+  Http/
+    Controllers/
+      Api/
+        PostController.php
+    Requests/
+      StorePostRequest.php
+      UpdatePostRequest.php
+routes/
+  api.php
+database/
+  migrations/
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+مدل داده (Post)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+فیلد	نوع	توضیح
+id	integer	کلید اصلی
+title	string	عنوان پست (حداکثر 50 کاراکتر)
+description	text/string	توضیحات
+author	string	نویسنده (حداکثر 30 کاراکتر)
+isComentOn	boolean	فعال بودن امکان کامنت
+timestamps	datetime	created_at / updated_at
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+🔧 پیشنهاد: نام فیلد isComentOn را در آینده به isCommentOn یا comments_enabled تغییر بده.
 
-## Laravel Sponsors
+پیش‌نیازها
+	•	PHP 8.2+
+	•	Composer
+	•	MySQL یا MariaDB
+	•	(اختیاری) NodeJS برای فرانت/Build
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+نصب و راه‌اندازی
 
-### Premium Partners
+git clone https://github.com/USERNAME/REPO.git
+cd REPO
+composer install
+cp .env.example .env
+php artisan key:generate
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# تنظیمات دیتابیس در .env
+php artisan migrate
+php artisan serve
 
-## Contributing
+Base URL:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+http://127.0.0.1:8000
 
-## Code of Conduct
+Endpoint ها
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Method	URI	توضیح	کد موفق
+GET	/api/posts	لیست پست‌ها	200
+POST	/api/posts	ایجاد پست	201
+GET	/api/posts/{id}	نمایش یک پست	200
+PUT	/api/posts/{id}	بروزرسانی کامل	200
+PATCH	/api/posts/{id}	بروزرسانی جزئی	200
+DELETE	/api/posts/{id}	حذف	200 / 204
 
-## Security Vulnerabilities
+نمونه ایجاد پست
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+curl -X POST http://127.0.0.1:8000/api/posts \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "First Post",
+    "description": "Simple description",
+    "author": "Morteza",
+    "isComentOn": true
+  }'
 
-## License
+نمونه پاسخ موفق (201)
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+{
+  "id": 1,
+  "title": "First Post",
+  "description": "Simple description",
+  "author": "Morteza",
+  "isComentOn": true,
+  "created_at": "2025-07-20T10:12:33.000000Z",
+  "updated_at": "2025-07-20T10:12:33.000000Z"
+}
+
+نمونه خطای اعتبارسنجی (422)
+
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "title": ["عنوان الزامی است."]
+  }
+}
+
+نمونه بروزرسانی جزئی (PATCH)
+
+curl -X PATCH http://127.0.0.1:8000/api/posts/1 \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{ "title": "Edited Title" }'
+
+حذف
+
+curl -X DELETE http://127.0.0.1:8000/api/posts/1 \
+  -H "Accept: application/json"
+
+قوانین اعتبارسنجی
+
+Store:
+
+title: required|string|max:50
+description: required|string
+author: required|string|max:30
+isComentOn: boolean
+
+Update:
+
+title: sometimes|required|string|max:50
+description: sometimes|required|string
+author: sometimes|required|string|max:30
+isComentOn: sometimes|boolean
+
+Roadmap (برنامه توسعه)
+	•	Pagination
+	•	جستجو و فیلتر
+	•	احراز هویت (Sanctum)
+	•	Authorization (Policies)
+	•	تست‌های Feature / Unit
+	•	OpenAPI / Swagger
+	•	اصلاح نام فیلد isComentOn
+
+⸻
+
+🇬🇧 English Version
+
+Overview
+
+A clean Laravel 12 REST API for managing posts with full CRUD, validation via Form Requests, and Route Model Binding.
+
+Features
+	•	CRUD (Create / Read / Update / Delete)
+	•	Route Model Binding
+	•	Separate Store / Update Form Requests
+	•	Partial updates (PATCH + sometimes)
+	•	Custom validation messages (multi-language ready)
+	•	Ready to extend (Auth, Filters, Pagination)
+
+Folder Structure
+
+app/
+  Http/
+    Controllers/
+      Api/
+        PostController.php
+    Requests/
+      StorePostRequest.php
+      UpdatePostRequest.php
+routes/
+  api.php
+database/
+  migrations/
+
+Data Model (Post)
+
+Field	Type	Notes
+id	integer	PK
+title	string	max 50
+description	text/string	body
+author	string	max 30
+isComentOn	boolean	comments enabled
+timestamps	datetime	created_at / updated_at
+
+Requirements
+	•	PHP 8.2+
+	•	Composer
+	•	MySQL / MariaDB
+	•	(Optional) Node / npm if you add frontend assets
+
+Installation
+
+git clone https://github.com/USERNAME/REPO.git
+cd REPO
+composer install
+cp .env.example .env
+php artisan key:generate
+# configure DB in .env
+php artisan migrate
+php artisan serve
+
+Base URL:
+
+http://127.0.0.1:8000
+
+Endpoints
+
+Method	URI	Action	Success
+GET	/api/posts	List posts	200
+POST	/api/posts	Create post	201
+GET	/api/posts/{id}	Show one	200
+PUT	/api/posts/{id}	Full update	200
+PATCH	/api/posts/{id}	Partial update	200
+DELETE	/api/posts/{id}	Delete	200 / 204
+
+Create Example
+
+curl -X POST http://127.0.0.1:8000/api/posts \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "First Post",
+    "description": "Simple description",
+    "author": "Morteza",
+    "isComentOn": true
+  }'
+
+Validation Error (422)
+
+{
+  "message": "The given data was invalid.",
+  "errors": {
+    "title": ["Title is required."]
+  }
+}
+
+Partial Update
+
+curl -X PATCH http://127.0.0.1:8000/api/posts/1 \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{ "title": "Edited Title" }'
+
+Delete
+
+curl -X DELETE http://127.0.0.1:8000/api/posts/1 -H "Accept: application/json"
+
+Validation Rules
+
+Store:
+
+title: required|string|max:50
+description: required|string
+author: required|string|max:30
+isComentOn: boolean
+
+Update:
+
+title: sometimes|required|string|max:50
+description: sometimes|required|string
+author: sometimes|required|string|max:30
+isComentOn: sometimes|boolean
+
+Roadmap
+	•	Pagination
+	•	Search / Filtering
+	•	Authentication (Sanctum)
+	•	Authorization (Policies / Gates)
+	•	Tests (Feature + Unit)
+	•	OpenAPI / Swagger Docs
+	•	Rename isComentOn field
+
+License
+
+MIT (optional). Add a LICENSE file if you want.
