@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\PostController;
+use App\Http\Controllers\Api\v1\PostController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,4 +14,6 @@ Route::post('/hello', function () {
     ]);
 });
 
-Route::apiResource('posts', PostController::class);
+Route::prefix('v1')->group(function(){
+    Route::apiResource('posts', PostController::class);
+});

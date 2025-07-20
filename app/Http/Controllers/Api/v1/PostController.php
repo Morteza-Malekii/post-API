@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StorePostRequest;
-use App\Http\Requests\UpdatePostRequest;
+use App\Http\Requests\api\v1\StorePostRequest;
+use App\Http\Requests\api\v1\UpdatePostRequest;
 use App\Models\Post;
 use Illuminate\Http\Request;
 
@@ -45,7 +45,6 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
-        dd($post);
         $data = $request->validated();
         $post->update($data);
         return response()->json([
