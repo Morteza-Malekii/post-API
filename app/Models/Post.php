@@ -12,4 +12,8 @@ class Post extends Model
         'author',
         'isComentOn'
     ];
+
+    protected $casts = [
+        'isComentOn' => 'boolean'
+    ];
 }
