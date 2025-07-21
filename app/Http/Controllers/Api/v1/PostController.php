@@ -9,6 +9,7 @@ use App\Http\Resources\v1\PostResource;
 use App\Models\Post;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Spatie\ResponseCache\Facades\ResponseCache;
 
 class PostController extends Controller
 {
@@ -17,7 +18,7 @@ class PostController extends Controller
      */
     public function index(): JsonResponse
     {
-        $posts = Post::latest()->paginate(2);
+        $posts = Post::latest()->paginate(10);
         return PostResource::collection($posts)
         ->additional([
             'meta' => [
@@ -34,6 +35,7 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $post = Post::create($data);
+        ResponseCache::clear();
         return (new PostResource($post))
         ->additional([
             'meta' => [
@@ -60,6 +62,7 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $post->update($data);
+        ResponseCache::clear();
         return (new PostResource($post->refresh()))
         ->additional([
             'meta'=>[
@@ -74,6 +77,7 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         $post->delete();
+        ResponseCache::clear();
         return response()->json([
             'meta' => [
                 'message'    => 'Post deleted successfully',

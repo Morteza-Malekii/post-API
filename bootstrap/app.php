@@ -12,7 +12,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // این‌جا middleware کش پاسخ را ثبت می‌کنیم
+        $middleware->append(\Spatie\ResponseCache\Middlewares\CacheResponse::class);
+
+        // اگر می‌خواهید روی برخی routeها کش نزنید:
+        $middleware->alias([
+            'doNotCacheResponse' => \Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
