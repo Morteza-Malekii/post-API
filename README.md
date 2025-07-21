@@ -1,278 +1,127 @@
-Laravel Post API
+# 📦 Spatie Response Cache Setup & Post API Documentation
 
-🇮🇷 نسخه فارسی
+---
 
-معرفی
+## 🇬🇧 English
 
-یک API ساده و تمیز برای مدیریت پست‌ها (CRUD) با Laravel 12 که شامل اعتبارسنجی (Form Request)، Route Model Binding، و ساختار RESTful است. این پروژه برای تمرین و همچنین پایه‌سازی یک سرویس واقعی مناسب است.
+### 1. Overview  
+A versioned RESTful Post API (Laravel 12) with:  
+- Full CRUD (List, Retrieve, Create, Update, Delete)  
+- Validation via FormRequest  
+- JSON Resource output with consistent fields & meta  
+- Pagination  
+- Response caching (Spatie Response Cache)  
+  - **Time‐cached** header  
+  - **Cache‐age** header  
+- Configurable TTL, store, bypass & per‐route exclusions  
 
-امکانات (Features)
-	•	ایجاد، خواندن، به‌روزرسانی، حذف پست‌ها (CRUD کامل)
-	•	Route Model Binding خودکار
-	•	اعتبارسنجی ورودی با Form Request (Store / Update)
-	•	پاسخ‌های JSON استاندارد
-	•	پیام‌های خطای اعتبارسنجی سفارشی
-	•	بروزرسانی جزئی با متد PATCH و Rule sometimes
-	•	آماده برای توسعه بیشتر (Auth, Pagination, Filter, Test)
+### 2. Installation & Setup
 
-ساختار پوشه (خلاصه)
+1. **Clone & install dependencies**  
+    ```bash
+    git clone <your-repo-url>
+    cd <project-folder>
+    composer install
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
-app/
-  Http/
-    Controllers/
-      Api/
-        PostController.php
-    Requests/
-      StorePostRequest.php
-      UpdatePostRequest.php
-routes/
-  api.php
-database/
-  migrations/
+2. **Environment** (`.env`)  
+    ```
+    DB_CONNECTION=...
+    DB_DATABASE=...
+    DB_USERNAME=...
+    DB_PASSWORD=...
 
-مدل داده (Post)
+    CACHE_DRIVER=redis
+    RESPONSE_CACHE_LIFETIME=300               # TTL in seconds (e.g. 5 minutes)
+    RESPONSE_CACHE_HEADER_NAME=X-Response-Cache
+    RESPONSE_CACHE_AGE_HEADER_NAME=X-Response-Cache-Age
+    ```
 
-فیلد	نوع	توضیح
-id	integer	کلید اصلی
-title	string	عنوان پست (حداکثر 50 کاراکتر)
-description	text/string	توضیحات
-author	string	نویسنده (حداکثر 30 کاراکتر)
-isComentOn	boolean	فعال بودن امکان کامنت
-timestamps	datetime	created_at / updated_at
+3. **Install & publish Spatie Response Cache**  
+    ```bash
+    composer require spatie/laravel-responsecache
+    php artisan vendor:publish \
+      --provider="Spatie\ResponseCache\ResponseCacheServiceProvider" \
+      --tag="responsecache-config"
+    ```
 
-🔧 پیشنهاد: نام فیلد isComentOn را در آینده به isCommentOn یا comments_enabled تغییر بده.
+4. **Edit `config/responsecache.php`**  
+    ```php
+    return [
+      'enabled'                    => env('RESPONSE_CACHE_ENABLED', true),
+      'cache_lifetime_in_seconds'  => (int) env('RESPONSE_CACHE_LIFETIME', 60 * 5),
+      'add_cache_time_header'      => true,
+      'add_cache_age_header'       => true,
+      'cache_time_header_name'     => env('RESPONSE_CACHE_HEADER_NAME', 'X-Response-Cache'),
+      'cache_age_header_name'      => env('RESPONSE_CACHE_AGE_HEADER_NAME', 'X-Response-Cache-Age'),
+      'cache_store'                => env('RESPONSE_CACHE_DRIVER', null),
+      // … other settings …
+    ];
+    ```
 
-پیش‌نیازها
-	•	PHP 8.2+
-	•	Composer
-	•	MySQL یا MariaDB
-	•	(اختیاری) NodeJS برای فرانت/Build
+5. **Register middleware** (in `bootstrap/app.php` or `app/Http/Kernel.php`)  
+    ```php
+    ->withMiddleware(function (Middleware $middleware) {
+      $middleware->append(\Spatie\ResponseCache\Middlewares\CacheResponse::class);
+      $middleware->alias([
+        'doNotCacheResponse' => \Spatie\ResponseCache\Middlewares\DoNotCacheResponse::class,
+      ]);
+    })
+    ```
 
-نصب و راه‌اندازی
+6. **Clear caches & restart**  
+    ```bash
+    php artisan config:clear
+    php artisan cache:clear
+    php artisan route:clear
+    php artisan view:clear
+    php artisan serve
+    ```
 
-git clone https://github.com/USERNAME/REPO.git
-cd REPO
-composer install
-cp .env.example .env
-php artisan key:generate
+### 3. Routes & Cache Behavior
 
-# تنظیمات دیتابیس در .env
-php artisan migrate
-php artisan serve
+| Method | URI             | Action   | Cache?            |
+|:------:|:---------------:|:--------:|:-----------------:|
+| GET    | `/api/posts`      | index    | ✅ cached GET     |
+| GET    | `/api/posts/{id}` | show     | ✅ cached GET     |
+| POST   | `/api/posts`      | store    | ❌ not cached     |
+| PATCH  | `/api/posts/{id}` | update   | ❌ not cached     |
+| DELETE | `/api/posts/{id}` | destroy  | ❌ not cached     |
 
-Base URL:
+- **Bypass cache** on any GET route:
+    ```php
+    Route::get('/posts/search', [PostController::class,'search'])
+         ->middleware('doNotCacheResponse');
+    ```
 
-http://127.0.0.1:8000
+- **Invalidate cache** after write:
+    ```php
+    use Spatie\ResponseCache\Facades\ResponseCache;
+    // inside store/update/destroy:
+    ResponseCache::clear();
+    ```
 
-Endpoint ها
+### 4. Examples (cURL)
 
-Method	URI	توضیح	کد موفق
-GET	/api/posts	لیست پست‌ها	200
-POST	/api/posts	ایجاد پست	201
-GET	/api/posts/{id}	نمایش یک پست	200
-PUT	/api/posts/{id}	بروزرسانی کامل	200
-PATCH	/api/posts/{id}	بروزرسانی جزئی	200
-DELETE	/api/posts/{id}	حذف	200 / 204
+```bash
+# List (cached)
+curl -H "Accept: application/json" http://127.0.0.1:8000/api/posts
 
-نمونه ایجاد پست
+# Show (cached)
+curl -H "Accept: application/json" http://127.0.0.1:8000/api/posts/1
 
+# Create (clears cache)
 curl -X POST http://127.0.0.1:8000/api/posts \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "First Post",
-    "description": "Simple description",
-    "author": "Morteza",
-    "isComentOn": true
-  }'
+  -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"title":"New","description":"Desc","author":"Bob","isComentOn":1}'
 
-نمونه پاسخ موفق (201)
-
-{
-  "id": 1,
-  "title": "First Post",
-  "description": "Simple description",
-  "author": "Morteza",
-  "isComentOn": true,
-  "created_at": "2025-07-20T10:12:33.000000Z",
-  "updated_at": "2025-07-20T10:12:33.000000Z"
-}
-
-نمونه خطای اعتبارسنجی (422)
-
-{
-  "message": "The given data was invalid.",
-  "errors": {
-    "title": ["عنوان الزامی است."]
-  }
-}
-
-نمونه بروزرسانی جزئی (PATCH)
-
+# Update (clears cache)
 curl -X PATCH http://127.0.0.1:8000/api/posts/1 \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{ "title": "Edited Title" }'
+  -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"title":"Updated"}'
 
-حذف
-
+# Delete (clears cache)
 curl -X DELETE http://127.0.0.1:8000/api/posts/1 \
   -H "Accept: application/json"
-
-قوانین اعتبارسنجی
-
-Store:
-
-title: required|string|max:50
-description: required|string
-author: required|string|max:30
-isComentOn: boolean
-
-Update:
-
-title: sometimes|required|string|max:50
-description: sometimes|required|string
-author: sometimes|required|string|max:30
-isComentOn: sometimes|boolean
-
-Roadmap (برنامه توسعه)
-	•	Pagination
-	•	جستجو و فیلتر
-	•	احراز هویت (Sanctum)
-	•	Authorization (Policies)
-	•	تست‌های Feature / Unit
-	•	OpenAPI / Swagger
-	•	اصلاح نام فیلد isComentOn
-
-⸻
-
-🇬🇧 English Version
-
-Overview
-
-A clean Laravel 12 REST API for managing posts with full CRUD, validation via Form Requests, and Route Model Binding.
-
-Features
-	•	CRUD (Create / Read / Update / Delete)
-	•	Route Model Binding
-	•	Separate Store / Update Form Requests
-	•	Partial updates (PATCH + sometimes)
-	•	Custom validation messages (multi-language ready)
-	•	Ready to extend (Auth, Filters, Pagination)
-
-Folder Structure
-
-app/
-  Http/
-    Controllers/
-      Api/
-        PostController.php
-    Requests/
-      StorePostRequest.php
-      UpdatePostRequest.php
-routes/
-  api.php
-database/
-  migrations/
-
-Data Model (Post)
-
-Field	Type	Notes
-id	integer	PK
-title	string	max 50
-description	text/string	body
-author	string	max 30
-isComentOn	boolean	comments enabled
-timestamps	datetime	created_at / updated_at
-
-Requirements
-	•	PHP 8.2+
-	•	Composer
-	•	MySQL / MariaDB
-	•	(Optional) Node / npm if you add frontend assets
-
-Installation
-
-git clone https://github.com/USERNAME/REPO.git
-cd REPO
-composer install
-cp .env.example .env
-php artisan key:generate
-# configure DB in .env
-php artisan migrate
-php artisan serve
-
-Base URL:
-
-http://127.0.0.1:8000
-
-Endpoints
-
-Method	URI	Action	Success
-GET	/api/posts	List posts	200
-POST	/api/posts	Create post	201
-GET	/api/posts/{id}	Show one	200
-PUT	/api/posts/{id}	Full update	200
-PATCH	/api/posts/{id}	Partial update	200
-DELETE	/api/posts/{id}	Delete	200 / 204
-
-Create Example
-
-curl -X POST http://127.0.0.1:8000/api/posts \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "First Post",
-    "description": "Simple description",
-    "author": "Morteza",
-    "isComentOn": true
-  }'
-
-Validation Error (422)
-
-{
-  "message": "The given data was invalid.",
-  "errors": {
-    "title": ["Title is required."]
-  }
-}
-
-Partial Update
-
-curl -X PATCH http://127.0.0.1:8000/api/posts/1 \
-  -H "Accept: application/json" \
-  -H "Content-Type: application/json" \
-  -d '{ "title": "Edited Title" }'
-
-Delete
-
-curl -X DELETE http://127.0.0.1:8000/api/posts/1 -H "Accept: application/json"
-
-Validation Rules
-
-Store:
-
-title: required|string|max:50
-description: required|string
-author: required|string|max:30
-isComentOn: boolean
-
-Update:
-
-title: sometimes|required|string|max:50
-description: sometimes|required|string
-author: sometimes|required|string|max:30
-isComentOn: sometimes|boolean
-
-Roadmap
-	•	Pagination
-	•	Search / Filtering
-	•	Authentication (Sanctum)
-	•	Authorization (Policies / Gates)
-	•	Tests (Feature + Unit)
-	•	OpenAPI / Swagger Docs
-	•	Rename isComentOn field
-
-License
-
-MIT (optional). Add a LICENSE file if you want.
