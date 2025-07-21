@@ -60,11 +60,12 @@ class PostController extends Controller
     {
         $data = $request->validated();
         $post->update($data);
-        return response()->json([
-            'data'=>$post,
-            'message'=>'داده با موفقیت آپدیت شد '
+        return (new PostResource($post->refresh()))
+        ->additional([
+            'meta'=>[
+                'message'=>'post updated successfuly',
+            ]
         ]);
-
     }
 
     /**
@@ -74,7 +75,11 @@ class PostController extends Controller
     {
         $post->delete();
         return response()->json([
-            'message'=>'پست با موفقیت حذف گردید'
-        ]) ;
+            'meta' => [
+                'message'    => 'Post deleted successfully',
+                'deletedId'  => $post->id,
+                'apiVersion' => 'v1',
+            ]
+        ], 200);
     }
 }
